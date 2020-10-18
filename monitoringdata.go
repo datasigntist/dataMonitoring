@@ -1,5 +1,37 @@
 package monitoringdata
 
+//Author : Vishwanathan Raman
+//
+//EmailId : datasigntist@gmail.com
+//
+//Last Modified Date : 18-Oct-2020
+//
+//Description:
+//This module has been developed as an utility for MLOPs to monitor the data at source for any changes.
+//It does the following and returns it as a map object having the sections for OriginalData, CurrentData and
+//PopulationStabilityIndex
+//
+//1) Builds the Elementary Statistics on the individual datasets
+//2) Calculates the Population Stability Index against each feature
+//
+//It accepts 2 inputs, the first being the contents of the original data and second being the current data.
+//The term original data refers to the data that was used for building the machine learning model.
+//The term current data refers to the data that is being used for scoring against the machine learning model.
+//The main program should use the ReadAll method to read all the data at once and pass in as the values to the function
+//GetStatisticsOnData
+//
+//It auto classifies the type of the data (Categorical or Continuous or Discrete) based on runtime obeservation.
+//The current version scans only 1 row of data to determine its type.
+//In future a more robust sampling method will be implemented.
+//
+//Assumption:
+//1) The first row in the Data is Column Headers. This is key as the ColumnHeaders are internally used as keys to
+//reecord the observations
+//2) In the observed data if the number of unique items is less than 5% of the overall data then its marked as
+//Categorical by default
+//3) It is assumed that the structure of the data both original and current are the same therefore conclusions related
+//to the type of the data is based on the original data which is then applied on the current data.
+
 import (
 	"strconv"
 	"strings"
@@ -8,7 +40,6 @@ import (
 
 	"gonum.org/v1/gonum/stat"
 
-	//"encoding/json"
 	"math"
 )
 
@@ -38,20 +69,8 @@ var colDatacollectionStructCurrent map[string]dataStatistics
 
 // GetStatisticsOnData function does the following
 // It takes as input the original training data and the current data
-// Build elementary statistics on the individual datasets
-// Calculates the Population Stability Index
+// The main program should use the ReadAll method to read all the data at once and pass in as the values
 func GetStatisticsOnData(originalRecord [][]string, currentRecord [][]string) map[string]interface{} {
-
-	// Open the file
-	/*csvfile, err := os.Open("titanicTrain.csv")
-	if err != nil {
-		log.Fatalln("Couldn't open the csv file", err)
-	}
-
-	// Parse the file
-	r := csv.NewReader(csvfile)
-
-	record, err := r.ReadAll()*/
 
 	columnNumbers := len(originalRecord[0])
 	colNames := make([]string, columnNumbers)
@@ -71,10 +90,6 @@ func GetStatisticsOnData(originalRecord [][]string, currentRecord [][]string) ma
 	dataSummaryAndStatistics["OriginalData"] = colDatacollectionStructOriginal
 	dataSummaryAndStatistics["CurrentData"] = colDatacollectionStructCurrent
 	dataSummaryAndStatistics["PopulationStabilityIndexValues"] = populationStabilityIndexValues
-
-	//retJSONString, err := json.Marshal(dataSummaryAndStatistics)
-
-	//fmt.Println(string(retJSONString))
 
 	return dataSummaryAndStatistics
 
@@ -164,8 +179,6 @@ func processAndCollectStatsOnData(colNames []string, record [][]string, isOrigin
 				}
 				tempColDataValues = append(tempColDataValues, convertToFloat64(record[row][col]))
 			}
-			//colDatacollectionFloat64[colNames[col]] = tempColDataValues
-
 			retDS := getStatsOnDataFloat64(colNames[col], tempColDataValues, colDataTypes[colNames[col]], totalNumberofRecords, missingDataCount, isOriginal)
 
 			colDatacollectionStruct[colNames[col]] = retDS
@@ -179,7 +192,6 @@ func processAndCollectStatsOnData(colNames []string, record [][]string, isOrigin
 
 				tempColDataValuesString = append(tempColDataValuesString, record[row][col])
 			}
-			//colDatacollectionFloat64[colNames[col]] = tempColDataValues
 
 			retDS := getStatsOnDataString(colNames[col], tempColDataValuesString, colDataTypes[colNames[col]], totalNumberofRecords)
 
@@ -329,7 +341,6 @@ func getStatsOnDataFloat64(name string, data []float64, datatype string, totalNu
 
 	uniqueItemsCountValues, uniqueItems, countedUniqueItems := countUniqueItems(data)
 
-	//if (float64(countedUniqueItems) / float64(totalNumberofRecords)) > 0.98 {
 	if countedUniqueItems == totalNumberofRecords {
 		ds = dataStatistics{
 			Name:             name,
