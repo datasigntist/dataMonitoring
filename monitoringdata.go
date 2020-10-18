@@ -8,7 +8,11 @@ package monitoringdata
 //
 //Description:
 //This module has been developed as an utility for MLOPs to monitor the data at source for any changes.
-//It does the following and returns it as a map object having the sections for OriginalData, CurrentData and
+//More often the data that is being used score the model turns out to be very different from the data that is being used to train the model.
+//As a result the model gives subpar results. Hence its important to monitor the scoring data periodically to see if there are any changes in the data.
+//If there are changes then the respective team has to be notified so that the model can be tweaked or retrained.
+//
+//The module does the following and returns it as a map object having the sections for OriginalData, CurrentData and
 //PopulationStabilityIndex
 //
 //1) Builds the Elementary Statistics on the individual datasets
@@ -25,12 +29,12 @@ package monitoringdata
 //In future a more robust sampling method will be implemented.
 //
 //Assumption:
-//1) The first row in the Data is Column Headers. This is key as the ColumnHeaders are internally used as keys to
-//reecord the observations
-//2) In the observed data if the number of unique items is less than 5% of the overall data then its marked as
-//Categorical by default
-//3) It is assumed that the structure of the data both original and current are the same therefore conclusions related
-//to the type of the data is based on the original data which is then applied on the current data.
+//1) The first row in the Data is Column Headers. This is key as the ColumnHeaders are internally used as keys to reecord the observations
+//
+//2) In the observed data if the number of unique items is less than 5% of the overall data then its marked as Categorical by default
+//
+//3) It is assumed that the structure of the data both original and current are the same therefore conclusions related to the type of the data is based on the original data which is then applied on the current data.
+//
 
 import (
 	"strconv"
