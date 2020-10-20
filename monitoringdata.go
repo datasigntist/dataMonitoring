@@ -13,10 +13,10 @@ package monitoringdata
 //If there are changes then the respective team has to be notified so that the model can be tweaked or retrained.
 //
 //The module does the following and returns it as a map object having the sections for OriginalData, CurrentData and
-//PopulationStabilityIndex
+//StabilityIndex
 //
 //1) Builds the Elementary Statistics on the individual datasets
-//2) Calculates the Population Stability Index against each feature
+//2) Calculates the Stability Index against each feature
 //
 //It accepts 2 inputs, the first being the contents of the original data and second being the current data.
 //The term original data refers to the data that was used for building the machine learning model.
@@ -89,17 +89,17 @@ func GetStatisticsOnData(originalRecord [][]string, currentRecord [][]string) ma
 	colDatacollectionStructOriginal = processAndCollectStatsOnData(colNames, originalRecord, true)
 	colDatacollectionStructCurrent = processAndCollectStatsOnData(colNames, currentRecord, false)
 
-	populationStabilityIndexValues := calculateOverallPopulationStabilityIndex(colNames, totalNumberofRecordsInOriginal, totalNumberofRecordsInCurrent)
+	stabilityIndexValues := calculateOverallStabilityIndex(colNames, totalNumberofRecordsInOriginal, totalNumberofRecordsInCurrent)
 
 	dataSummaryAndStatistics["OriginalData"] = colDatacollectionStructOriginal
 	dataSummaryAndStatistics["CurrentData"] = colDatacollectionStructCurrent
-	dataSummaryAndStatistics["PopulationStabilityIndexValues"] = populationStabilityIndexValues
+	dataSummaryAndStatistics["StabilityIndexValues"] = stabilityIndexValues
 
 	return dataSummaryAndStatistics
 
 }
 
-func calculateOverallPopulationStabilityIndex(colNames []string, totalNumberofRecordsInOriginal float64, totalNumberofRecordsInCurrent float64) map[string]float64 {
+func calculateOverallStabilityIndex(colNames []string, totalNumberofRecordsInOriginal float64, totalNumberofRecordsInCurrent float64) map[string]float64 {
 
 	populationStabilityIndexValues := make(map[string]float64, len(colNames))
 
