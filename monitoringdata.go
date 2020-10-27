@@ -82,12 +82,21 @@ func GetStatisticsOnData(originalRecord [][]string, currentRecord [][]string) ma
 	totalNumberofRecordsInCurrent := float64(len(originalRecord) - 1)
 	dataSummaryAndStatistics := make(map[string]interface{}, 0)
 
+	colDatacollectionStructOriginalChannel := make(chan map[string]dataStatistics)
+	colDatacollectionStructCurrentChannel := make(chan map[string]dataStatistics)
+
 	for i := 0; i < columnNumbers; i++ {
 		colNames[i] = originalRecord[0][i]
 	}
 
-	colDatacollectionStructOriginal = processAndCollectStatsOnData(colNames, originalRecord, true)
-	colDatacollectionStructCurrent = processAndCollectStatsOnData(colNames, currentRecord, false)
+	/*colDatacollectionStructOriginal = processAndCollectStatsOnData(colNames, originalRecord, true)
+	colDatacollectionStructCurrent = processAndCollectStatsOnData(colNames, currentRecord, false)*/
+
+	go processAndCollectStatsOnDataThroughChannels(colNames, originalRecord, true, colDatacollectionStructOriginalChannel)
+	go processAndCollectStatsOnDataThroughChannels(colNames, originalRecord, true, colDatacollectionStructCurrentChannel)
+
+	colDatacollectionStructOriginal = <-colDatacollectionStructOriginalChannel
+	colDatacollectionStructCurrent = <-colDatacollectionStructCurrentChannel
 
 	stabilityIndexValues := calculateOverallStabilityIndex(colNames, totalNumberofRecordsInOriginal, totalNumberofRecordsInCurrent)
 
@@ -96,7 +105,6 @@ func GetStatisticsOnData(originalRecord [][]string, currentRecord [][]string) ma
 	dataSummaryAndStatistics["StabilityIndexValues"] = stabilityIndexValues
 
 	return dataSummaryAndStatistics
-
 }
 
 func calculateOverallStabilityIndex(colNames []string, totalNumberofRecordsInOriginal float64, totalNumberofRecordsInCurrent float64) map[string]float64 {
@@ -143,6 +151,68 @@ func calculatePopulationStabilityIndexContinuous(originalData []float64, current
 	}
 
 	return psi
+}
+
+func processAndCollectStatsOnDataThroughChannels(colNames []string, record [][]string, isOriginal bool, c chan map[string]dataStatistics) {
+	colDatacollectionStruct := make(map[string]dataStatistics)
+
+	totalNumberofRecords := len(record) - 1
+	columnNumbers := len(record[0])
+	colDataTypes := make(map[string]string)
+
+	for i := 0; i < columnNumbers; i++ {
+		colNames[i] = record[0][i]
+	}
+
+	for i := 0; i < columnNumbers; i++ {
+		if isNumeric(record[1][i]) {
+			if isInt(record[1][i]) {
+				colDataTypes[colNames[i]] = "int64"
+			} else {
+				colDataTypes[colNames[i]] = "float64"
+			}
+		} else {
+			colDataTypes[colNames[i]] = "string"
+		}
+	}
+
+	for col := 0; col < columnNumbers; col++ {
+
+		var tempColDataValues []float64
+		var tempColDataValuesString []string
+		var missingDataCount int
+
+		if colDataTypes[colNames[col]] != "string" {
+			for row := 1; row <= totalNumberofRecords; row++ {
+
+				if strings.TrimSpace(record[row][col]) == "" {
+					missingDataCount = missingDataCount + 1
+				}
+				tempColDataValues = append(tempColDataValues, convertToFloat64(record[row][col]))
+			}
+			retDS := getStatsOnDataFloat64(colNames[col], tempColDataValues, colDataTypes[colNames[col]], totalNumberofRecords, missingDataCount, isOriginal)
+
+			colDatacollectionStruct[colNames[col]] = retDS
+
+		} else {
+			for row := 1; row <= totalNumberofRecords; row++ {
+
+				if strings.TrimSpace(record[row][col]) == "" {
+					record[row][col] = strings.TrimSpace(record[row][col])
+				}
+
+				tempColDataValuesString = append(tempColDataValuesString, record[row][col])
+			}
+
+			retDS := getStatsOnDataString(colNames[col], tempColDataValuesString, colDataTypes[colNames[col]], totalNumberofRecords)
+
+			colDatacollectionStruct[colNames[col]] = retDS
+
+		}
+	}
+
+	c <- colDatacollectionStruct
+
 }
 
 func processAndCollectStatsOnData(colNames []string, record [][]string, isOriginal bool) map[string]dataStatistics {
