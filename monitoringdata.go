@@ -113,21 +113,21 @@ func GetStatisticsOnData(originalRecord [][]string, currentRecord [][]string) ma
 
 func calculateOverallStabilityIndex(colNames []string, totalNumberofRecordsInOriginal float64, totalNumberofRecordsInCurrent float64) map[string]float64 {
 
-	populationStabilityIndexValues := make(map[string]float64, len(colNames))
+	stabilityIndexValues := make(map[string]float64, len(colNames))
 
 	for _, colName := range colNames {
 		if colDatacollectionStructOriginal[colName].DistType == "Non Unique" {
 			if colDatacollectionStructOriginal[colName].VariableType == "Continuous" {
 				psi := calculatePopulationStabilityIndexContinuous(colDatacollectionStructOriginal[colName].QuantileDataDistribution, colDatacollectionStructCurrent[colName].QuantileDataDistribution, totalNumberofRecordsInOriginal, totalNumberofRecordsInCurrent)
-				populationStabilityIndexValues[colName] = psi
+				stabilityIndexValues[colName] = psi
 			} else if colDatacollectionStructOriginal[colName].VariableType == "Categorical" || colDatacollectionStructOriginal[colName].VariableType == "Discrete" {
 				psi := calculatePopulationStabilityIndexCategorical(colDatacollectionStructOriginal[colName].UniqueItemCountAndValues, colDatacollectionStructCurrent[colName].UniqueItemCountAndValues, totalNumberofRecordsInOriginal, totalNumberofRecordsInCurrent)
-				populationStabilityIndexValues[colName] = psi
+				stabilityIndexValues[colName] = psi
 			}
 		}
 	}
 
-	return populationStabilityIndexValues
+	return stabilityIndexValues
 
 }
 
