@@ -82,21 +82,25 @@ func GetStatisticsOnData(originalRecord [][]string, currentRecord [][]string) ma
 	totalNumberofRecordsInCurrent := float64(len(originalRecord) - 1)
 	dataSummaryAndStatistics := make(map[string]interface{}, 0)
 
-	colDatacollectionStructOriginalChannel := make(chan map[string]dataStatistics)
-	colDatacollectionStructCurrentChannel := make(chan map[string]dataStatistics)
+	/*
+		colDatacollectionStructOriginalChannel := make(chan map[string]dataStatistics)
+		colDatacollectionStructCurrentChannel := make(chan map[string]dataStatistics)
+	*/
 
 	for i := 0; i < columnNumbers; i++ {
 		colNames[i] = originalRecord[0][i]
 	}
 
-	/*colDatacollectionStructOriginal = processAndCollectStatsOnData(colNames, originalRecord, true)
-	colDatacollectionStructCurrent = processAndCollectStatsOnData(colNames, currentRecord, false)*/
+	colDatacollectionStructOriginal = processAndCollectStatsOnData(colNames, originalRecord, true)
+	colDatacollectionStructCurrent = processAndCollectStatsOnData(colNames, currentRecord, false)
 
-	go processAndCollectStatsOnDataThroughChannels(colNames, originalRecord, true, colDatacollectionStructOriginalChannel)
-	go processAndCollectStatsOnDataThroughChannels(colNames, originalRecord, true, colDatacollectionStructCurrentChannel)
+	/*
+		go processAndCollectStatsOnDataThroughChannels(colNames, originalRecord, true, colDatacollectionStructOriginalChannel)
+		go processAndCollectStatsOnDataThroughChannels(colNames, originalRecord, false, colDatacollectionStructCurrentChannel)
 
-	colDatacollectionStructOriginal = <-colDatacollectionStructOriginalChannel
-	colDatacollectionStructCurrent = <-colDatacollectionStructCurrentChannel
+		colDatacollectionStructOriginal = <-colDatacollectionStructOriginalChannel
+		colDatacollectionStructCurrent = <-colDatacollectionStructCurrentChannel
+	*/
 
 	stabilityIndexValues := calculateOverallStabilityIndex(colNames, totalNumberofRecordsInOriginal, totalNumberofRecordsInCurrent)
 
@@ -212,6 +216,8 @@ func processAndCollectStatsOnDataThroughChannels(colNames []string, record [][]s
 	}
 
 	c <- colDatacollectionStruct
+
+	close(c)
 
 }
 
